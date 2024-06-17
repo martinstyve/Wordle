@@ -10,7 +10,6 @@ import no.uib.inf101.grid.CellPosition;
 import no.uib.inf101.grid.GridCell;
 import no.uib.inf101.grid.GridDimension;
 
-
 public class GameModel implements ViewableGameModel, ControllableGameModel {
 
   private GameBoard board;
@@ -21,67 +20,23 @@ public class GameModel implements ViewableGameModel, ControllableGameModel {
 
   private String correctWord;
   private List<String> guesses;
-
-  private char[] charArray;
+  private StringBuilder currentGuess;
 
   final String BG_GREEN = "\u001b[42m";
   final String BG_YELLOW = "\u001b[43m";
   final String RESET = "\u001b[0m";
 
-  /**
-   * Constructs a new GameModel with the GameBoard and random NumberedTileFactory.
-   *
-   * @param board the game board for the model
-   */
   public GameModel(GameBoard board) {
     this.board = board;
     this.gameState = GameState.ACTIVE_GAME;
-    // this.numberedTileFactory = new RandomNumberedTileFactory();
     this.correctWord = "snake";
 
     this.attempts = 6;
     this.correctWord = correctWord.toUpperCase();
     this.guesses = new ArrayList<>();
+    this.currentGuess = new StringBuilder();
     System.out.println("Wordle!");
   }
-
-  // public void guessWord() {
-  // Scanner sc = new Scanner(System.in);
-
-  // while (attempts > 0) {
-  // System.out.print("Enter your guess: ");
-  // String guess = sc.nextLine().toUpperCase();
-
-  // if (guess.length() != correctWord.length()) {
-  // System.out.println("Invalid guess length. Please try again.");
-  // continue;
-  // }
-
-  // guesses.add(guess);
-
-  // char[] guessArray = guess.toCharArray();
-  // for (int i = 0; i < guessArray.length; i++) {
-  // if (guessArray[i] == correctWord.charAt(i)) {
-  // System.out.print(BG_GREEN + guessArray[i] + RESET);
-  // } else if (correctWord.contains(String.valueOf(guessArray[i]))) {
-  // System.out.print(BG_YELLOW + guessArray[i] + RESET);
-  // } else {
-  // System.out.print(guessArray[i]);
-  // }
-  // }
-  // System.out.println();
-
-  // if (guess.equals(correctWord)) {
-  // System.out.println("Congratulations! You've guessed the word correctly.");
-  // return;
-  // }
-
-  // attempts--;
-  // System.out.println("Attempts remaining: " + attempts);
-  // }
-
-  // System.out.println("Game over! The correct word was: " + correctWord);
-  // }
 
   public void handleGuess(String guess) {
     guess = guess.toUpperCase();
@@ -104,13 +59,32 @@ public class GameModel implements ViewableGameModel, ControllableGameModel {
         System.out.println("Game over! The correct word was: " + correctWord);
       }
     }
+    currentGuess.setLength(0); // Reset current guess after handling
   }
 
-  public List<String> getGuesses() { // Add this method
+  public void updateCurrentGuess(char c) {
+    if (c == '\b') {
+      if (currentGuess.length() > 0) {
+        currentGuess.deleteCharAt(currentGuess.length() - 1);
+      }
+    } else if (c == '\n') {
+      if (currentGuess.length() == correctWord.length()) {
+        handleGuess(currentGuess.toString());
+      }
+    } else if (Character.isLetter(c) && currentGuess.length() < correctWord.length()) {
+      currentGuess.append(Character.toUpperCase(c));
+    }
+  }
+
+  public String getCurrentGuess() {
+    return currentGuess.toString();
+  }
+
+  public List<String> getGuesses() {
     return guesses;
   }
 
-  public String getCorrectWord() { // Add this method
+  public String getCorrectWord() {
     return correctWord;
   }
 
@@ -118,6 +92,8 @@ public class GameModel implements ViewableGameModel, ControllableGameModel {
   public void resetGame() {
     this.board = board.clearBoard();
     this.gameState = GameState.ACTIVE_GAME;
+    this.guesses.clear();
+    this.currentGuess.setLength(0);
   }
 
   @Override
@@ -127,7 +103,7 @@ public class GameModel implements ViewableGameModel, ControllableGameModel {
 
   @Override
   public Iterable<GridCell<Character>> getTilesOnBoard() {
-    return null;
+    return board;
   }
 
   @Override
@@ -154,7 +130,6 @@ public class GameModel implements ViewableGameModel, ControllableGameModel {
 
   @Override
   public boolean isGameWon() {
-    // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'isGameWon'");
   }
 }

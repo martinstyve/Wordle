@@ -8,6 +8,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import no.uib.inf101.game2048.midi.GameSong;
+import no.uib.inf101.game2048.model.GameModel;
 import no.uib.inf101.game2048.model.GameState;
 import no.uib.inf101.game2048.view.GameView;
 
@@ -23,29 +24,19 @@ public class GameController implements KeyListener {
   private GameSong music;
   private boolean musicPlaying;
 
-  /**
-   * Constructs a new GameController with the specified ControllableGameModel and
-   * GameView.
-   *
-   * @param controllableModel the ControllableGameModel to control
-   * @param view              the GameView to display the game
-   */
   public GameController(ControllableGameModel controllableModel, GameView view) {
     this.model = controllableModel;
     this.view = view;
     this.gameState = model.getGameState();
 
     this.music = new GameSong();
-    music.run();
+    // music.run();
     musicPlaying = false;
-    // this.view.setMusicPlaying(musicPlaying);
-
     view.addKeyListener(this);
   }
 
   @Override
   public void keyPressed(KeyEvent e) {
-    // Update gameState before handling the key event
     gameState = model.getGameState();
 
     if (gameState == GameState.GAME_OVER || gameState == GameState.GAME_WON) {
@@ -58,39 +49,26 @@ public class GameController implements KeyListener {
       handleMenuInput(e);
     }
 
-    if (e.getKeyCode() == KeyEvent.VK_T) { // t for 'Titanium' by David Guetta
+    if (e.getKeyCode() == KeyEvent.VK_T) {
       toggleMusicPlayback();
     }
     view.repaint();
   }
 
-  /**
-   * Handles user input during an active game.
-   *
-   * @param e the KeyEvent representing the user input
-   */
   private void handleGameInput(KeyEvent e) {
-    if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_A) {
-    } else if (e.getKeyCode() == KeyEvent.VK_RIGHT || e.getKeyCode() == KeyEvent.VK_D) {
-    } else if (e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_S) {
-    } else if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_W) {
-    } else if (e.getKeyCode() == KeyEvent.VK_M) {
-      model.setGameState(GameState.MENU);
+    char keyChar = e.getKeyChar();
+    if (Character.isLetter(keyChar) || keyChar == '\b' || keyChar == '\n') {
+      ((GameModel) model).updateCurrentGuess(keyChar);
+      model.toString();
     }
   }
 
-  /**
-   * Handles user input during the menu screen.
-   *
-   * @param e the KeyEvent representing the user input
-   */
   private void handleMenuInput(KeyEvent e) {
     if (e.getKeyCode() == KeyEvent.VK_M) {
       model.setGameState(GameState.ACTIVE_GAME);
     } else if (e.getKeyCode() == KeyEvent.VK_R) {
       model.resetGame();
     } else if (e.getKeyCode() == KeyEvent.VK_C) {
-      // try/catch code written by ChatGPT
       try {
         Desktop.getDesktop().browse(new URI("https://www.instagram.com/martinstyve/"));
       } catch (IOException | URISyntaxException ex) {
@@ -99,17 +77,13 @@ public class GameController implements KeyListener {
     }
   }
 
-  /**
-   * pauses/unpauses music, and toggles state of musicPlaying.
-   */
   private void toggleMusicPlayback() {
     if (musicPlaying) {
       music.doPauseMidiSounds();
     } else {
       music.doUnpauseMidiSounds();
     }
-    musicPlaying = !musicPlaying; // Toggle music state
-    // view.setMusicPlaying(musicPlaying);
+    musicPlaying = !musicPlaying;
   }
 
   @Override
