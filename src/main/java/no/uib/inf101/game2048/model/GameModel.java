@@ -3,21 +3,14 @@ package no.uib.inf101.game2048.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.Scanner;
 
 import no.uib.inf101.game2048.controller.ControllableGameModel;
-import no.uib.inf101.game2048.model.numberedTile.NumberedTile;
-import no.uib.inf101.game2048.model.numberedTile.NumberedTileFactory;
-import no.uib.inf101.game2048.model.numberedTile.RandomNumberedTileFactory;
 import no.uib.inf101.game2048.view.ViewableGameModel;
 import no.uib.inf101.grid.CellPosition;
 import no.uib.inf101.grid.GridCell;
 import no.uib.inf101.grid.GridDimension;
 
-/**
- * The GameModel class represents the model of the 2048 game, handling game
- * logic and state.
- */
+
 public class GameModel implements ViewableGameModel, ControllableGameModel {
 
   private GameBoard board;
