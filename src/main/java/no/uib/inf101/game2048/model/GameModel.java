@@ -74,6 +74,43 @@ public class GameModel implements ViewableGameModel, ControllableGameModel {
     } else if (Character.isLetter(c) && currentGuess.length() < correctWord.length()) {
       currentGuess.append(Character.toUpperCase(c));
     }
+    System.out.println(board.prettyString());
+  }
+
+  public List<List<Character>> getBoardState() {
+    List<List<Character>> boardState = new ArrayList<>();
+
+    for (String guess : guesses) {
+      List<Character> row = new ArrayList<>();
+      for (char c : guess.toCharArray()) {
+        row.add(c);
+      }
+      boardState.add(row);
+    }
+
+    // Add the current guess as the next row if there are remaining attempts
+    if (gameState == GameState.ACTIVE_GAME && currentGuess.length() > 0 && boardState.size() < board.rows()) {
+      List<Character> currentGuessRow = new ArrayList<>();
+      for (int i = 0; i < board.cols(); i++) {
+        if (i < currentGuess.length()) {
+          currentGuessRow.add(currentGuess.charAt(i));
+        } else {
+          currentGuessRow.add(' ');
+        }
+      }
+      boardState.add(currentGuessRow);
+    }
+
+    // Fill remaining rows with empty characters if necessary
+    while (boardState.size() < board.rows()) {
+      List<Character> emptyRow = new ArrayList<>();
+      for (int i = 0; i < board.cols(); i++) {
+        emptyRow.add(' '); // assuming ' ' (space) as the placeholder for empty cells
+      }
+      boardState.add(emptyRow);
+    }
+
+    return boardState;
   }
 
   public String getCurrentGuess() {

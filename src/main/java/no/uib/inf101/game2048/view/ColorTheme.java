@@ -14,7 +14,7 @@ public interface ColorTheme {
    * @param value the value of a given tile for which to retrieve the color
    * @return the color corresponding to the value
    */
-  Color getCellColor(int value);
+  Color getCellColor(Character value);
 
   /**
    * Retrieves the color of the frame.

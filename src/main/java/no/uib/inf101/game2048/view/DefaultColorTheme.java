@@ -7,8 +7,7 @@ public class DefaultColorTheme implements ColorTheme {
   // Color pallette found from original game (link: https://play2048.co/) using
   // Google chrome extension ColorZilla to find rgb values
 
-  @Override
-  public Color getCellColor(int c) {
+  public Color getCellColorForInt(int c) {
     Color color = switch (c) {
     case 0 -> new Color(204, 193, 180);
     case 2 -> new Color(238, 228, 218);
@@ -27,6 +26,16 @@ public class DefaultColorTheme implements ColorTheme {
     return color;
   }
 
+  @Override
+  public Color getCellColor(Character c) {
+    Color color = switch (c) {
+    case 'r' -> new Color(255, 00, 00);
+    case 'g' -> new Color(00, 255, 00);
+    case 'y' -> new Color(00, 00, 255);
+    default -> new Color(00, 00, 00); // should never be reached, kept in to prevent game crash
+    };
+    return color;
+  }
   @Override
   public Color getFrameColor() {
     return new Color(188, 172, 159);

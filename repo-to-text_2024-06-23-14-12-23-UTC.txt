@@ -1,0 +1,2329 @@
+Directory: Wordle
+
+Directory Structure:
+```
+.
+
+```
+
+Contents of LICENSE:
+```
+The MIT License (MIT)
+Copyright (c) 2014 Gabriele Cirulli
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+```
+
+Contents of pom.xml:
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Major project properties -->
+    <groupId>no.uib.inf101.tetris</groupId> <!-- must match package of Main class -->
+    <artifactId>INF101GridLab</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <name>INF101 Grid Lab</name>
+    <packaging>jar</packaging>
+
+    <properties>
+        <!-- General project properties -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>17</java.version>
+
+        <!-- Properties required for packaging application as JAR and installer -->
+        <app.main.class>${groupId}.TetrisMain</app.main.class> <!-- name of main class -->
+        <app.vendor>Torstein Strømme</app.vendor> <!-- replace with your name -->
+        <app.version>1.0.0</app.version> <!-- version displayed in "about" -->
+        <app.installer.macosx.type>dmg</app.installer.macosx.type> <!-- dmg, pkg -->
+        <app.installer.windows.type>msi</app.installer.windows.type> <!-- msi, exe -->
+        <app.macosx.icon.path>src/main/logo/macosx/logo.icns</app.macosx.icon.path>
+        <app.windows.icon.path>src/main/logo/windows/logo.ico</app.windows.icon.path>
+
+        <!-- Library and plugin versions -->
+        <junit.version>5.9.1</junit.version>
+        <maven.compiler.plugin.version>3.10.1</maven.compiler.plugin.version>
+        <maven.dependency.plugin.version>3.4.0</maven.dependency.plugin.version>
+        <maven.jar.plugin.version>3.3.0</maven.jar.plugin.version>
+        <maven.surefire.plugin.version>3.0.0-M5</maven.surefire.plugin.version>
+        <exec.maven.plugin.version>1.6.0</exec.maven.plugin.version>
+
+        <!-- Computed properties -->
+        <maven.compiler.release>${java.version}</maven.compiler.release>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <configuration>
+                    <release>${java.version}</release>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>${maven.dependency.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>
+                                ${project.build.directory}/libs
+                            </outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                            <includeScope>compile</includeScope>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven.jar.plugin.version}</version>
+                <configuration>
+                    <archive>
+                        <index>true</index>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>${app.main.class}</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven.surefire.plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.junit.jupiter</groupId>
+                        <artifactId>junit-jupiter-engine</artifactId>
+                        <version>${junit.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>build-mac</id>
+            <activation>
+                <os><family>mac</family></os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <version>${exec.maven.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>Build Native Mac App</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <executable>./make/build_app_mac.sh</executable>
+                            <environmentVariables>
+                                <APP_PACKAGE>${project.groupId}</APP_PACKAGE>
+                                <ABOUT_NAME>${project.name}</ABOUT_NAME>
+                                <APP_VENDOR>${app.vendor}</APP_VENDOR>
+                                <APP_VERSION>${app.version}</APP_VERSION>
+                                <ICON_PATH>${app.macosx.icon.path}</ICON_PATH>
+                                <INSTALLER_TYPE>${app.installer.macosx.type}</INSTALLER_TYPE>
+                                <JAVA_HOME>${java.home}</JAVA_HOME>
+                                <JAVA_VERSION>${java.version}</JAVA_VERSION>
+                                <MAIN_CLASS>${app.main.class}</MAIN_CLASS>
+                                <MAIN_JAR>${project.artifactId}-${project.version}.jar</MAIN_JAR>
+                                <PROJECT_NAME>${project.name}</PROJECT_NAME>
+                                <PROJECT_VERSION>${project.version}</PROJECT_VERSION>
+                            </environmentVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>build-windows</id>
+            <activation>
+                <os><family>windows</family></os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <version>${exec.maven.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>Build Native Windows App</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <executable>./make/build_app_windows.bat</executable>
+                            <environmentVariables>
+                                <APP_PACKAGE>${project.groupId}</APP_PACKAGE>
+                                <APP_VENDOR>${app.vendor}</APP_VENDOR>
+                                <APP_VERSION>${app.version}</APP_VERSION>
+                                <ICON_PATH>${app.windows.icon.path}</ICON_PATH>
+                                <INSTALLER_TYPE>${app.installer.windows.type}</INSTALLER_TYPE>
+                                <JAVA_HOME>${java.home}</JAVA_HOME>
+                                <JAVA_VERSION>${java.version}</JAVA_VERSION>
+                                <MAIN_JAR>${project.artifactId}-${project.version}.jar</MAIN_JAR>
+                                <MAIN_CLASS>${app.main.class}</MAIN_CLASS>
+                                <PROJECT_NAME>${project.name}</PROJECT_NAME>
+                                <PROJECT_VERSION>${project.version}</PROJECT_VERSION>
+                            </environmentVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>
+
+```
+
+Contents of README.md:
+```
+# Wordle
+
+Introduction
+Welcome to the Wordle Clone project! This repository contains a Java implementation of the popular word puzzle game Wordle. The goal of the game is to guess a secret five-letter word within six attempts. After each guess, you receive feedback indicating which letters are correct and in the correct position, and which letters are correct but in the wrong position.
+
+Features
+Simple and intuitive command-line interface
+Random word selection from a predefined list
+Feedback on guessed words to guide the player
+Unlimited replayability with different words each game
+Clean and modular code for easy understanding and modification
+```
+
+Contents of target/test-classes/no/uib/inf101/game/model/TestGameBoard.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/test-classes/no/uib/inf101/game/model/TestGameModel.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/test-classes/no/uib/inf101/game/model/numberedTile/TestNumberedTile.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/test-classes/no/uib/inf101/game/model/numberedTile/TestPatternedTileFactory.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/test-classes/no/uib/inf101/game/model/numberedTile/PatternedTileFactory.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/test-classes/no/uib/inf101/game/view/DefaultColorThemeTest.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/test-classes/no/uib/inf101/game/view/CellPositionToPixelConverterTest.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/test-classes/no/uib/inf101/grid/CellPositionTest.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/test-classes/no/uib/inf101/grid/GridCellTest.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/test-classes/no/uib/inf101/grid/GridTest.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/music/Titanium.midi:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/GameMain.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/midi/GameSong.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/controller/GameController.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/controller/ControllableGameModel.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/model/GameState.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/model/GameModel.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/model/GameBoard.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/model/Direction.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/model/numberedTile/RandomNumberedTileFactory.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/model/numberedTile/NumberedTile.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/model/numberedTile/NumberedTileFactory.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/view/GameView.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/view/Inf101Graphics.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/view/DefaultColorTheme.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/view/Inf101Graphics$1.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/view/CellPositionToPixelConverter.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/view/ColorTheme.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/view/SampleView.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/game2048/view/ViewableGameModel.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/grid/CellPosition.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/grid/GridDimension.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/grid/IGrid.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/grid/Grid.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/no/uib/inf101/grid/GridCell.class:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/images/musicMuted.png:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/images/musicPlaying.png:
+```
+[Could not decode file contents]
+
+```
+
+Contents of target/classes/images/2048_logo.png:
+```
+[Could not decode file contents]
+
+```
+
+Contents of make/build_app_windows.bat:
+```
+@ECHO OFF
+REM Script for packaging a Java application as a Windows installer.
+REM Designed to be used with Maven (see example pom.xml at
+REM https://github.com/torsteins/JavaInstallerForSwing)
+REM
+REM Inspired by a template made by dlemmermann at
+REM https://github.com/dlemmermann/JPackageScriptFX
+REM
+REM Simplified by Torstein Strømme to fit INF101 at the University of Bergen.
+
+REM ------ ENVIRONMENT --------------------------------------------------------
+REM The script depends on various environment variables to exist in order to
+REM run properly. The location of the java binaries (java home), and the
+REM project version as defined inside the pom.xml file, e.g. 1.0-SNAPSHOT.
+
+ECHO "required input environment variables..."
+ECHO "  APP_PACKAGE: %APP_PACKAGE%"
+ECHO "  APP_VENDOR: %APP_VENDOR%"
+REM  APP_VERSION: the application version, e.g. 1.0.0, shown in "about" dialog
+ECHO "  APP_VERSION: %APP_VERSION%"
+ECHO "  ICON_PATH: %ICON_PATH%"
+REM  Set desired installer type: "msi" "exe" (or "app-image").
+ECHO "  INSTALLER_TYPE: %INSTALLER_TYPE%"
+ECHO "  JAVA_HOME: %JAVA_HOME%"
+ECHO "  JAVA_VERSION: %JAVA_VERSION%"
+ECHO "  MAIN_JAR: %MAIN_JAR%"
+ECHO "  MAIN_CLASS: %MAIN_CLASS%"
+ECHO "  PROJECT_NAME: %PROJECT_NAME%"
+ECHO "  PROJECT_VERSION: %PROJECT_VERSION%"
+
+ECHO "computed variables..."
+@REM SET PATH_TO_MAIN="target\classes\%MAIN_CLASS:.=\%.class"
+SET PATH_TO_MAIN="target\classes\%APP_PACKAGE:.=\%"
+ECHO "  PATH_TO_MAIN: %PATH_TO_MAIN%"
+SET YEAR=%DATE:~6,4%
+ECHO "  YEAR: %YEAR%"
+
+REM ------ SETUP DIRECTORIES AND FILES ----------------------------------------
+REM Remove previously generated java runtime and installers. Copy all required
+REM jar files into the input/libs folder.
+
+ECHO "setting up directories and files..."
+IF EXIST target\java-runtime RMDIR /S /Q  .\target\java-runtime
+IF EXIST target\installer RMDIR /S /Q target\installer
+MKDIR target\installer\input\libs
+
+XCOPY /S /Q target\libs\* target\installer\input\libs\
+COPY target\%MAIN_JAR% target\installer\input\libs\
+
+REM ------ REQUIRED MODULES ---------------------------------------------------
+REM Use jlink to detect all modules that are required to run the application.
+REM Starting point for the jdep analysis is the set of jars being used by the
+REM application.
+
+ECHO "detecting required modules with jdeps..."
+
+"%JAVA_HOME%\bin\jdeps" ^
+  -q ^
+  --multi-release %JAVA_VERSION% ^
+  --ignore-missing-deps ^
+  --class-path "target\installer\input\libs\*" ^
+  --print-module-deps "%PATH_TO_MAIN%" > temp.txt
+
+SET /p detected_modules=<temp.txt
+DEL temp.txt
+ECHO "  detected modules: %detected_modules%"
+
+REM ------ RUNTIME IMAGE ------------------------------------------------------
+REM Use the jlink tool to create a runtime image for our application. We are
+REM doing this in a separate step instead of letting jlink do the work as part
+REM of the jpackage tool. This approach allows for finer configuration and also
+REM works with dependencies that are not fully modularized, yet.
+
+ECHO "creating java runtime image with jlink..."
+
+CALL "%JAVA_HOME%\bin\jlink" ^
+  --strip-native-commands ^
+  --no-header-files ^
+  --no-man-pages ^
+  --compress=2 ^
+  --strip-debug ^
+  --add-modules "%detected_modules%" ^
+  --output target/java-runtime
+
+REM ------ PACKAGING ----------------------------------------------------------
+REM In the end we will find the package inside the target/installer directory.
+ECHO "creating install package with jpackage..."
+
+CALL "%JAVA_HOME%\bin\jpackage" ^
+  --type %INSTALLER_TYPE% ^
+  --dest target/installer ^
+  --input target/installer/input/libs ^
+  --name "%PROJECT_NAME%"  ^
+  --main-class "%MAIN_CLASS%" ^
+  --main-jar "%MAIN_JAR%" ^
+  --runtime-image target/java-runtime ^
+  --icon "%ICON_PATH%" ^
+  --app-version %APP_VERSION% ^
+  --vendor "%APP_VENDOR%" ^
+  --copyright "Copyright © %YEAR% %APP_VENDOR%" ^
+  --win-dir-chooser ^
+  --win-per-user-install ^
+  --win-shortcut ^
+  --win-menu
+REM  --java-options -Xmx2048m
+
+```
+
+Contents of make/build_app_mac.sh:
+```
+#!/bin/bash
+# Script for packaging a Java application as a Mac installer.
+# Designed to be used with Maven (see example pom.xml at
+# https://github.com/torsteins/JavaInstallerForSwing)
+#
+# Inspired by a template made by dlemmermann at
+# https://github.com/dlemmermann/JPackageScriptFX
+#
+# Simplified by Torstein Strømme to fit INF101 at the University of Bergen.
+
+
+# ------ ENVIRONMENT ----------------------------------------------
+# The script depends on environment variables to exist in order to
+# run properly (think of them as input parameters to the script).
+# We print them all here:
+
+echo "required input environment variables..."
+echo "  ABOUT_NAME: $ABOUT_NAME"           # name of colorgrid in menu
+echo "  APP_PACKAGE: $APP_PACKAGE"         # e.g. "no.uib.inf101.colorgrid"
+echo "  APP_VENDOR: $APP_VENDOR"           # info shown in ~about~ dialog
+echo "  APP_VERSION: $APP_VERSION"         # version shown in ~about~ dialog
+echo "  ICON_PATH: $ICON_PATH"             # path to .icns -file
+echo "  INSTALLER_TYPE: $INSTALLER_TYPE"   # e.g. "dmg" or "pkg"
+echo "  JAVA_HOME: $JAVA_HOME"             # path to java installation
+echo "  JAVA_VERSION: $JAVA_VERSION"       # e.g. "17"
+echo "  MAIN_CLASS: $MAIN_CLASS"           # e.g. "no.uib.inf101.gridview.Main"
+echo "  MAIN_JAR: $MAIN_JAR"               # filename produced in package phase
+echo "  PROJECT_NAME: $PROJECT_NAME"       # human-friendly name of application
+echo "  PROJECT_VERSION: $PROJECT_VERSION" # version in pom, e.g. "1.0-SNAPSHOT"
+echo "computed variables..."
+CURRENT_YEAR=$(date +'%Y')
+echo "  CURRENT_YEAR: $CURRENT_YEAR"
+#PATH_TO_MAIN_CLASS="target/classes/${MAIN_CLASS//'.'//}.class"
+PATH_TO_MAIN_CLASS="target/classes/${APP_PACKAGE//'.'//}/"
+echo "  PATH_TO_MAIN_CLASS: $PATH_TO_MAIN_CLASS"
+echo "  pwd: "
+pwd
+
+# ------ SETUP DIRECTORIES AND FILES ----------------------------------------
+# Remove previously generated java runtime and installers. Copy all required
+# jar files into the input/libs folder.
+
+echo "setting up directories and files..."
+rm -rfd ./target/java-runtime/
+rm -rfd target/installer/
+
+mkdir -p target/installer/input/libs/
+
+if [[ -d target/libs ]]; then
+  cp target/libs/* target/installer/input/libs
+fi
+cp "target/${MAIN_JAR}" target/installer/input/libs/
+
+## ------ REQUIRED MODULES ---------------------------------------------------
+## Use jlink to detect all modules that are required to run the application.
+## Starting point for the jdep analysis is the set of jars being used by the
+## application.
+
+echo "detecting required modules.."
+echo "$JAVA_HOME/bin/jdeps" \
+       -q \
+       --multi-release "${JAVA_VERSION}" \
+       --ignore-missing-deps \
+       --print-module-deps \
+       --class-path "target/installer/input/libs/*" \
+         "$PATH_TO_MAIN_CLASS"
+
+detected_modules=$("$JAVA_HOME/bin/jdeps" \
+  -q \
+  --multi-release "${JAVA_VERSION}" \
+  --ignore-missing-deps \
+  --print-module-deps \
+  --class-path "target/installer/input/libs/*" \
+    "$PATH_TO_MAIN_CLASS")
+echo "  detected modules: ${detected_modules}"
+
+# Note: in the original version of this script by dlemmermann (reference
+# above), there is a separate section on manual required modules. Please
+# adapt from that script if you find that this is required. Only applies
+# to certain modules, such as jdk.crypto.ec or jdk.localedata.
+
+# ------ RUNTIME IMAGE ------------------------------------------------------
+# Use the jlink tool to create a runtime image for our application. We are
+# doing this in a separate step instead of letting jlink do the work as part
+# of the jpackage tool. This approach allows for finer configuration and also
+# works with dependencies that are not fully modularized, yet.
+
+echo "creating java runtime image..."
+echo "$JAVA_HOME/bin/jlink" \
+       --strip-native-commands \
+       --no-header-files \
+       --no-man-pages  \
+       --compress=2  \
+       --strip-debug \
+       --add-modules "${detected_modules}" \
+       --output target/java-runtime
+"$JAVA_HOME/bin/jlink" \
+  --strip-native-commands \
+  --no-header-files \
+  --no-man-pages  \
+  --compress=2  \
+  --strip-debug \
+  --add-modules "${detected_modules}" \
+  --output target/java-runtime
+
+# ------ PACKAGING ----------------------------------------------------------
+# In the end we will find the package inside the target/installer directory.
+
+echo "creating installer of type $INSTALLER_TYPE..."
+echo "$JAVA_HOME/bin/jpackage" \
+       --type "$INSTALLER_TYPE" \
+       --dest target/installer \
+       --input target/installer/input/libs \
+       --name "${PROJECT_NAME}" \
+       --main-class "${MAIN_CLASS}" \
+       --main-jar "${MAIN_JAR}" \
+       --runtime-image target/java-runtime \
+       --icon "${ICON_PATH}" \
+       --app-version "${APP_VERSION}" \
+       --vendor "${APP_VENDOR}" \
+       --copyright "Copyright © ${CURRENT_YEAR} ${APP_VENDOR}." \
+       --mac-package-identifier "${APP_PACKAGE}"
+     # --java-options -Xmx2048m \
+
+"$JAVA_HOME/bin/jpackage" \
+  --type "$INSTALLER_TYPE" \
+  --dest target/installer \
+  --input target/installer/input/libs \
+  --name "${PROJECT_NAME}" \
+  --main-class "${MAIN_CLASS}" \
+  --main-jar "${MAIN_JAR}" \
+  --runtime-image target/java-runtime \
+  --icon "${ICON_PATH}" \
+  --app-version "${APP_VERSION}" \
+  --vendor "${APP_VENDOR}" \
+  --copyright "Copyright © ${CURRENT_YEAR} ${APP_VENDOR}." \
+  --mac-package-identifier "${APP_PACKAGE}"
+# --java-options -Xmx2048m \
+
+```
+
+Contents of src/main/resources/music/Titanium.midi:
+```
+[Could not decode file contents]
+
+```
+
+Contents of src/main/resources/images/musicMuted.png:
+```
+[Could not decode file contents]
+
+```
+
+Contents of src/main/resources/images/musicPlaying.png:
+```
+[Could not decode file contents]
+
+```
+
+Contents of src/main/resources/images/2048_logo.png:
+```
+[Could not decode file contents]
+
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/GameMain.java:
+```
+package no.uib.inf101.game2048;
+
+import javax.swing.JFrame;
+
+import no.uib.inf101.game2048.controller.GameController;
+import no.uib.inf101.game2048.model.GameBoard;
+import no.uib.inf101.game2048.model.GameModel;
+import no.uib.inf101.game2048.model.numberedTile.NumberedTileFactory;
+import no.uib.inf101.game2048.view.GameView;
+
+/**
+ * The GameMain class is the entry point for the 2048 game application. It
+ * initializes the game model, view, and controller, and sets up the main JFrame
+ * for the game window.
+ */
+public class GameMain {
+
+  public static final String WINDOW_TITLE = "INF101 2048";
+
+  public static void main(String[] args) {
+    GameBoard board = new GameBoard(6, 5);
+    // NumberedTileFactory factory = new RandomNumberedTileFactory();
+    GameModel model = new GameModel(board);
+    GameView view = new GameView(model);
+    new GameController(model, view);
+
+    JFrame frame = new JFrame(WINDOW_TITLE);
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    frame.setContentPane(view);
+    frame.pack();
+    frame.setVisible(true);
+    frame.setLocationRelativeTo(null); // centers frame
+    frame.setResizable(true); // set false for fixed window size
+  }
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/midi/GameSong.java:
+```
+package no.uib.inf101.game2048.midi;
+
+import java.io.InputStream;
+
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.Sequencer;
+
+/**
+ * Play music
+ * chosen song: Titanium - David Guetta
+ */
+public class GameSong implements Runnable {
+    private static final String GAMEMUSIC = "music/titanium.midi";
+    private Sequencer sequencer;
+
+    @Override
+    public void run() {
+        InputStream song = GameSong.class.getClassLoader().getResourceAsStream(GAMEMUSIC);
+        this.doPlayMidi(song, true);
+    }
+
+    private void doPlayMidi(final InputStream is, final boolean loop) {
+        try {
+            this.doStopMidiSounds();
+            (this.sequencer = MidiSystem.getSequencer()).setSequence(MidiSystem.getSequence(is));
+            if (loop) {
+                this.sequencer.setLoopCount(-1);
+            }
+            this.sequencer.open();
+            this.sequencer.start();
+        }
+        catch (Exception e) {
+            this.midiError("" + e);
+        }
+    }
+
+    public void doStopMidiSounds() {
+        try {
+            if (this.sequencer == null || !this.sequencer.isRunning()) {
+                return;
+            }
+            this.sequencer.stop();
+            this.sequencer.close();
+        }
+        catch (Exception e) {
+            this.midiError("" + e);
+        }
+        this.sequencer = null;
+    }
+
+    public void doPauseMidiSounds() {
+        try {
+            if (this.sequencer == null || !this.sequencer.isRunning()) {
+                return;
+            }
+            this.sequencer.stop();
+        }
+        catch (Exception e) {
+            this.midiError("" + e);
+        }
+    }
+    
+    public void doUnpauseMidiSounds() {
+        try {
+            if (this.sequencer == null) {
+                return;
+            }
+            this.sequencer.start();
+        }
+        catch (Exception e) {
+            this.midiError("" + e);
+        }
+    }
+
+    private void midiError(final String msg) {
+        System.err.println("Midi error: " + msg);
+        this.sequencer = null;
+    }
+}
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/controller/GameController.java:
+```
+package no.uib.inf101.game2048.controller;
+
+import java.awt.Desktop;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import no.uib.inf101.game2048.midi.GameSong;
+import no.uib.inf101.game2048.model.GameModel;
+import no.uib.inf101.game2048.model.GameState;
+import no.uib.inf101.game2048.view.GameView;
+
+/**
+ * The GameController class handles user input and updates the game state
+ * accordingly.
+ */
+public class GameController implements KeyListener {
+
+  private ControllableGameModel model;
+  private GameView view;
+  private GameState gameState;
+  private GameSong music;
+  private boolean musicPlaying;
+
+  public GameController(ControllableGameModel controllableModel, GameView view) {
+    this.model = controllableModel;
+    this.view = view;
+    this.gameState = model.getGameState();
+
+    this.music = new GameSong();
+    // music.run();
+    musicPlaying = false;
+    view.addKeyListener(this);
+  }
+
+  @Override
+  public void keyPressed(KeyEvent e) {
+    gameState = model.getGameState();
+
+    if (gameState == GameState.GAME_OVER || gameState == GameState.GAME_WON) {
+      if (e.getKeyCode() == KeyEvent.VK_R) {
+        model.resetGame();
+      }
+    } else if (gameState == GameState.ACTIVE_GAME) {
+      handleGameInput(e);
+    } else if (gameState == GameState.MENU) {
+      handleMenuInput(e);
+    }
+
+    if (e.getKeyCode() == KeyEvent.VK_T) {
+      toggleMusicPlayback();
+    }
+
+    // Repaint the view after handling input
+    view.repaint();
+  }
+
+  private void handleGameInput(KeyEvent e) {
+    char keyChar = e.getKeyChar();
+    if (Character.isLetter(keyChar) || keyChar == '\b' || keyChar == '\n') {
+      ((GameModel) model).updateCurrentGuess(keyChar);
+    }
+  }
+
+  private void handleMenuInput(KeyEvent e) {
+    if (e.getKeyCode() == KeyEvent.VK_M) {
+      model.setGameState(GameState.ACTIVE_GAME);
+    } else if (e.getKeyCode() == KeyEvent.VK_R) {
+      model.resetGame();
+    } else if (e.getKeyCode() == KeyEvent.VK_C) {
+      try {
+        Desktop.getDesktop().browse(new URI("https://www.instagram.com/martinstyve/"));
+      } catch (IOException | URISyntaxException ex) {
+        ex.printStackTrace();
+      }
+    }
+  }
+
+  private void toggleMusicPlayback() {
+    if (musicPlaying) {
+      music.doPauseMidiSounds();
+    } else {
+      music.doUnpauseMidiSounds();
+    }
+    musicPlaying = !musicPlaying;
+  }
+
+  @Override
+  public void keyTyped(KeyEvent e) {
+    // do nothing
+  }
+
+  @Override
+  public void keyReleased(KeyEvent e) {
+    // do nothing
+  }
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/controller/ControllableGameModel.java:
+```
+package no.uib.inf101.game2048.controller;
+
+import no.uib.inf101.game2048.model.Direction;
+import no.uib.inf101.game2048.model.GameState;
+import no.uib.inf101.grid.CellPosition;
+
+/**
+ * The ControllableGameModel interface represents a controllable game model that
+ * allows interaction with the game state and board.
+ */
+public interface ControllableGameModel {
+
+
+  /**
+   * Checks if the game has been won.
+   *
+   * @return true if the game has been won, false otherwise
+   */
+  boolean isGameWon();
+
+  /**
+   * Resets the game to its initial state.
+   */
+  void resetGame();
+
+  /**
+   * Sets the game state to the specified state.
+   *
+   * @param gameSstate the new game state
+   */
+  void setGameState(GameState gameState);
+
+  /**
+   * Gets the current state of the game.
+   *
+   * @return the state of the game
+   */
+  GameState getGameState();
+}
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/model/GameBoard.java:
+```
+package no.uib.inf101.game2048.model;
+
+import no.uib.inf101.grid.CellPosition;
+import no.uib.inf101.grid.Grid;
+
+/**
+ * The GameBoard class represents the game board for a 2048 game.
+ */
+public class GameBoard extends Grid<Character> {
+
+  /**
+   * Constructs a new GameBoard with the specified number of rows and columns.
+   *
+   * @param rows the number of rows in the board
+   * @param cols the number of columns in the board
+   */
+  public GameBoard(int rows, int cols) {
+    super(rows, cols, '-');
+  }
+
+  /**
+   * Creates a copy of the GameBoard object.
+   * 
+   * @return a copy of the GameBoard
+   */
+  public GameBoard copy() {
+    GameBoard boardCopy = new GameBoard(this.rows(), this.cols());
+    for (int i = 0; i < this.rows(); i++) {
+      for (int j = 0; j < this.cols(); j++) {
+        boardCopy.set(new CellPosition(i, j), this.get(new CellPosition(i, j)));
+      }
+    }
+    return boardCopy;
+  }
+
+  /**
+   * Clears the board by setting all cells to 0.
+   *
+   * @return a new GameBoard with all cells set to 0
+   */
+  public GameBoard clearBoard() {
+    GameBoard board = new GameBoard(this.rows(), this.cols());
+    for (int i = 0; i < this.rows(); i++) {
+      for (int j = 0; j < this.cols(); j++) {
+        board.set(new CellPosition(i, j), '-');
+      }
+    }
+    return board;
+  }
+
+  /**
+   * A string representation of the board in a pretty way For test purposes
+   *
+   * @return a string representation of the board
+   */
+  public String prettyString() {
+    String pretty = "";
+    for (int i = 0; i < this.rows(); i++) {
+      for (int j = 0; j < this.cols(); j++) {
+        pretty += this.get(new CellPosition(i, j));
+      }
+      pretty += "\n";
+    }
+    return pretty.strip();
+  }
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/model/GameState.java:
+```
+package no.uib.inf101.game2048.model;
+
+public enum GameState {
+  ACTIVE_GAME,
+   MENU,
+   GAME_OVER,
+   GAME_WON;
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/model/GameModel.java:
+```
+package no.uib.inf101.game2048.model;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import no.uib.inf101.game2048.controller.ControllableGameModel;
+import no.uib.inf101.game2048.view.ViewableGameModel;
+import no.uib.inf101.grid.CellPosition;
+import no.uib.inf101.grid.GridCell;
+import no.uib.inf101.grid.GridDimension;
+
+public class GameModel implements ViewableGameModel, ControllableGameModel {
+
+  private GameBoard board;
+  private GameState gameState;
+
+  private final Random random = new Random();
+  private int attempts;
+
+  private String correctWord;
+  private List<String> guesses;
+  private StringBuilder currentGuess;
+
+  final String BG_GREEN = "\u001b[42m";
+  final String BG_YELLOW = "\u001b[43m";
+  final String RESET = "\u001b[0m";
+
+  public GameModel(GameBoard board) {
+    this.board = board;
+    this.gameState = GameState.ACTIVE_GAME;
+    this.correctWord = "snake";
+
+    this.attempts = 6;
+    this.correctWord = correctWord.toUpperCase();
+    this.guesses = new ArrayList<>();
+    this.currentGuess = new StringBuilder();
+    System.out.println("Wordle!");
+  }
+
+  public void handleGuess(String guess) {
+    guess = guess.toUpperCase();
+
+    if (guess.length() != correctWord.length()) {
+      System.out.println("Invalid guess length. Please try again.");
+      return;
+    }
+
+    guesses.add(guess);
+
+    if (guess.equals(correctWord)) {
+      System.out.println("Congratulations! You've guessed the word correctly.");
+      gameState = GameState.GAME_WON;
+    } else {
+      attempts--;
+      System.out.println("Attempts remaining: " + attempts);
+      if (attempts <= 0) {
+        gameState = GameState.GAME_OVER;
+        System.out.println("Game over! The correct word was: " + correctWord);
+      }
+    }
+    currentGuess.setLength(0); // Reset current guess after handling
+  }
+
+  public void updateCurrentGuess(char c) {
+    if (c == '\b') {
+      if (currentGuess.length() > 0) {
+        currentGuess.deleteCharAt(currentGuess.length() - 1);
+      }
+    } else if (c == '\n') {
+      if (currentGuess.length() == correctWord.length()) {
+        handleGuess(currentGuess.toString());
+      }
+    } else if (Character.isLetter(c) && currentGuess.length() < correctWord.length()) {
+      currentGuess.append(Character.toUpperCase(c));
+    }
+    System.out.println(board.prettyString());
+  }
+
+  public List<List<Character>> getBoardState() {
+    List<List<Character>> boardState = new ArrayList<>();
+
+    for (String guess : guesses) {
+      List<Character> row = new ArrayList<>();
+      for (char c : guess.toCharArray()) {
+        row.add(c);
+      }
+      boardState.add(row);
+    }
+
+    // Add the current guess as the next row if there are remaining attempts
+    if (gameState == GameState.ACTIVE_GAME && currentGuess.length() > 0 && boardState.size() < board.rows()) {
+      List<Character> currentGuessRow = new ArrayList<>();
+      for (int i = 0; i < board.cols(); i++) {
+        if (i < currentGuess.length()) {
+          currentGuessRow.add(currentGuess.charAt(i));
+        } else {
+          currentGuessRow.add(' ');
+        }
+      }
+      boardState.add(currentGuessRow);
+    }
+
+    // Fill remaining rows with empty characters if necessary
+    while (boardState.size() < board.rows()) {
+      List<Character> emptyRow = new ArrayList<>();
+      for (int i = 0; i < board.cols(); i++) {
+        emptyRow.add(' '); // assuming ' ' (space) as the placeholder for empty cells
+      }
+      boardState.add(emptyRow);
+    }
+
+    return boardState;
+  }
+
+  public String getCurrentGuess() {
+    return currentGuess.toString();
+  }
+
+  public List<String> getGuesses() {
+    return guesses;
+  }
+
+  public String getCorrectWord() {
+    return correctWord;
+  }
+
+  @Override
+  public void resetGame() {
+    this.board = board.clearBoard();
+    this.gameState = GameState.ACTIVE_GAME;
+    this.guesses.clear();
+    this.currentGuess.setLength(0);
+  }
+
+  @Override
+  public GridDimension getDimension() {
+    return board;
+  }
+
+  @Override
+  public Iterable<GridCell<Character>> getTilesOnBoard() {
+    return board;
+  }
+
+  @Override
+  public void setGameState(GameState gameState) {
+    this.gameState = gameState;
+  }
+
+  @Override
+  public GameState getGameState() {
+    return gameState;
+  }
+
+  @Override
+  public String toString() {
+    String result = "";
+    for (int row = 0; row < board.rows(); row++) {
+      for (int col = 0; col < board.cols(); col++) {
+        result += board.get(new CellPosition(row, col)) + " ";
+      }
+      result += "\n";
+    }
+    return result;
+  }
+
+  @Override
+  public boolean isGameWon() {
+    throw new UnsupportedOperationException("Unimplemented method 'isGameWon'");
+  }
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/model/Direction.java:
+```
+package no.uib.inf101.game2048.model;
+
+public enum Direction {
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/model/numberedTile/NumberedTileFactory.java:
+```
+package no.uib.inf101.game2048.model.numberedTile;
+
+public interface NumberedTileFactory {
+
+  /**
+   * Get a new numbered tile
+   *
+   * @return NumberedTile
+   */
+  public NumberedTile getNew();
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/model/numberedTile/RandomNumberedTileFactory.java:
+```
+package no.uib.inf101.game2048.model.numberedTile;
+
+import java.util.Random;
+
+import no.uib.inf101.grid.CellPosition;
+
+/**
+ * The RandomNumberedTileFactory class represents a factory for creating
+ * randomly generated NumberedTile objects.
+ */
+public class RandomNumberedTileFactory implements NumberedTileFactory {
+
+  @Override
+  public NumberedTile getNew() {
+    Random random = new Random();
+    
+
+    // 1/10 probability for tile to get value 4
+    if (random.nextInt(10) == 0) {
+    }
+
+    int randomRow = random.nextInt(4);
+    int randomCol = random.nextInt(4);
+    CellPosition pos = new CellPosition(randomRow, randomCol);
+
+    return new NumberedTile('-', pos);
+  }
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/model/numberedTile/NumberedTile.java:
+```
+package no.uib.inf101.game2048.model.numberedTile;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+
+import no.uib.inf101.grid.CellPosition;
+import no.uib.inf101.grid.GridCell;
+
+/**
+ * The NumberedTile class represents a tile with a numeric value at a specific
+ * position on the game board.
+ */
+public class NumberedTile implements Iterable<GridCell<Character>> {
+
+  private final Character value;
+  private final CellPosition pos;
+
+  /**
+   * Constructs a new NumberedTile with the specified value and position.
+   *
+   * @param value the value of the tile
+   * @param pos   the position of the tile on the game board
+   */
+  public NumberedTile(Character value, CellPosition pos) {
+    this.value = value;
+    this.pos = pos;
+  }
+
+  /**
+   * Gets the value of the tile.
+   *
+   * @return the value of the tile
+   */
+  public int getValue() {
+    return value;
+  }
+
+  @Override
+  public Iterator<GridCell<Character>> iterator() {
+    List<GridCell<Character>> list = new ArrayList<>();
+    list.add(new GridCell<>(pos, value));
+    return list.iterator();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == this)
+      return true;
+    if (!(o instanceof NumberedTile)) {
+      return false;
+    }
+    NumberedTile tile = (NumberedTile) o;
+    return value == tile.value && Objects.equals(pos, tile.pos);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(value, pos);
+  }
+
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/view/GameView.java:
+```
+package no.uib.inf101.game2048.view;
+
+import javax.swing.JPanel;
+
+import no.uib.inf101.game2048.model.GameModel;
+import no.uib.inf101.game2048.model.GameState;
+import no.uib.inf101.grid.CellPosition;
+import no.uib.inf101.grid.GridCell;
+import no.uib.inf101.grid.GridDimension;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.geom.Rectangle2D;
+import java.util.List;
+
+public class GameView extends JPanel {
+
+  private static final int OUTERMARGIN_X = 100;
+  private static final int OUTERMARGIN_Y = 200;
+  private static final int CELLMARGIN = 10;
+  private static final int PREFERREDSIDESIZE = 100;
+  private static final int GUESSEDWORD_FONTSIZE = 50;
+
+  private final ViewableGameModel viewableGameModel;
+  private boolean musicPlaying;
+  private final ColorTheme colorTheme;
+
+  public GameView(ViewableGameModel viewableGameModel) {
+    this.viewableGameModel = viewableGameModel;
+
+    this.colorTheme = new DefaultColorTheme();
+    this.setBackground(colorTheme.getBackgroundColor());
+
+    this.setFocusable(true);
+    this.setPreferredSize(getDefaultSize(viewableGameModel.getDimension()));
+  }
+
+  @Override
+  public void paintComponent(Graphics g) {
+    super.paintComponent(g);
+    Graphics2D g2 = (Graphics2D) g;
+    drawGame(g2);
+    // drawGuesses(g2);
+  }
+
+  private void drawGame(Graphics2D g2) {
+    int gridWidth = viewableGameModel.getDimension().cols() * (PREFERREDSIDESIZE + CELLMARGIN) + CELLMARGIN;
+    int gridHeight = viewableGameModel.getDimension().rows() * (PREFERREDSIDESIZE + CELLMARGIN) + CELLMARGIN;
+
+    int boardX = OUTERMARGIN_X;
+    int boardY = OUTERMARGIN_Y;
+
+    g2.setColor(colorTheme.getFrameColor());
+    g2.fillRoundRect(boardX, boardY, gridWidth, gridHeight, CELLMARGIN, CELLMARGIN);
+
+    List<List<Character>> boardState = ((GameModel) viewableGameModel).getBoardState();
+
+    for (int row = 0; row < boardState.size(); row++) {
+      for (int col = 0; col < boardState.get(row).size(); col++) {
+        Character value = boardState.get(row).get(col);
+        drawCell(g2, row, col, value);
+      }
+    }
+  }
+
+  private void drawCell(Graphics2D g2, int row, int col, Character value) {
+    int x = OUTERMARGIN_X + col * (PREFERREDSIDESIZE + CELLMARGIN) + CELLMARGIN;
+    int y = OUTERMARGIN_Y + row * (PREFERREDSIDESIZE + CELLMARGIN) + CELLMARGIN;
+
+    Color backgroundColor = colorTheme.getBackgroundColor();
+    Color foregroundColor = colorTheme.getCellColor(value);
+
+    g2.setColor(backgroundColor);
+    g2.fillRoundRect(x, y, PREFERREDSIDESIZE, PREFERREDSIDESIZE, CELLMARGIN, CELLMARGIN);
+
+    g2.setColor(foregroundColor);
+    g2.setFont(new Font("SansSerif", Font.BOLD, GUESSEDWORD_FONTSIZE));
+
+    String cellValue = value == ' ' ? "" : Character.toString(value);
+    Rectangle2D textBounds = g2.getFontMetrics().getStringBounds(cellValue, g2);
+
+    int textX = (int) (x + (PREFERREDSIDESIZE - textBounds.getWidth()) / 2);
+    int textY = (int) (y + (PREFERREDSIDESIZE - textBounds.getHeight()) / 2 + g2.getFontMetrics().getAscent());
+
+    g2.drawString(cellValue, textX, textY);
+  }
+
+  private void drawGuesses(Graphics2D g2) {
+    GameModel model = (GameModel) viewableGameModel;
+    List<String> guesses = model.getGuesses();
+    String currentGuess = model.getCurrentGuess();
+    int y = OUTERMARGIN_Y + 500;
+
+    g2.setColor(Color.BLACK);
+    g2.setFont(new Font("SansSerif", Font.BOLD, GUESSEDWORD_FONTSIZE));
+
+    for (String guess : guesses) {
+      g2.drawString(guess, OUTERMARGIN_X, y);
+      y += 50;
+    }
+
+    g2.drawString(currentGuess, OUTERMARGIN_X, y);
+  }
+
+  private Dimension getDefaultSize(GridDimension dim) {
+    int width = dim.cols() * (PREFERREDSIDESIZE + CELLMARGIN) + 2 * OUTERMARGIN_X;
+    int height = dim.rows() * (PREFERREDSIDESIZE + CELLMARGIN) + 2 * OUTERMARGIN_Y;
+    return new Dimension(width, height);
+  }
+
+  public void setMusicPlaying(boolean musicPlaying) {
+    this.musicPlaying = musicPlaying;
+  }
+
+  public boolean isMusicPlaying() {
+    return musicPlaying;
+  }
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/view/ViewableGameModel.java:
+```
+package no.uib.inf101.game2048.view;
+
+import no.uib.inf101.game2048.model.GameState;
+import no.uib.inf101.grid.GridCell;
+import no.uib.inf101.grid.GridDimension;
+
+/**
+ * The ViewableGameModel interface represents the model of the game that is
+ * viewable by the user interface. It provides methods to retrieve information
+ * about the game state, dimensions of the board, tiles on the board, and the
+ * score.
+ */
+public interface ViewableGameModel {
+
+  /**
+   * The dimensions of the board, i.e. number of rows and columns
+   *
+   * @return an object of type GridDimension
+   */
+  GridDimension getDimension();
+
+  /**
+   * An object that when iterated over returns all positions and corresponding
+   * vales
+   *
+   * @return an iterable object
+   */
+  Iterable<GridCell<Character>> getTilesOnBoard();
+
+  /**
+   * Tells us the state of the game
+   *
+   * @return the state of the game
+   */
+  GameState getGameState();
+
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/view/Inf101Graphics.java:
+```
+package no.uib.inf101.game2048.view;
+
+// University of Bergen INF101 helper methods for graphics with Swing.
+// Methods for drawing images are adapted with permission from
+// https://kosbie.net/cmu/spring-08/15-100/handouts/DrawImageFromFile.java
+//
+// You may use this code freely. It is provided as-is, without any warranty.
+
+import javax.imageio.ImageIO;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Shape;
+import java.awt.geom.Dimension2D;
+import java.awt.image.BufferedImage;
+import java.awt.geom.Point2D;
+import java.awt.geom.AffineTransform;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.File;
+
+public class Inf101Graphics {
+
+  //////////////////////////////////////
+  /// String helper methods
+  /////////////////////////////////////
+
+  /**
+   * Draw a string centered at the given point.
+   *
+   * @param g The graphics context to draw on
+   * @param s The string to draw
+   * @param x The x coordinate
+   * @param y The y coordinate
+   */
+  public static void drawCenteredString(Graphics g, String s, double x, double y) {
+    FontMetrics metrics = g.getFontMetrics();
+    double txtX = x - ((double) metrics.stringWidth(s)) / 2;
+    double txtY = y - ((double) metrics.getHeight()) / 2 + metrics.getAscent();
+    g.drawString(s, (int) Math.round(txtX), (int) Math.round(txtY));
+  }
+
+  /**
+   * Draw a string centered at the given point.
+   *
+   * @param g The graphics context to draw on
+   * @param s The string to draw
+   * @param p The point on which to center the string
+   */
+  public static void drawCenteredString(Graphics g, String s, Point2D p) {
+    Inf101Graphics.drawCenteredString(g, s, p.getX(), p.getY());
+  }
+
+  /**
+   * Draw a string centered in the given rectangle. The string will be vertically
+   * centered and horizontally centered with respect to the given rectangle. If
+   * the string is too wide or to tall to fit in the rectangle, it will overflow.
+   * If the width and the height are 0, the string will be centered around the x
+   * and y coordinates.
+   *
+   * @param g      The graphics context to draw on
+   * @param s      The string to draw
+   * @param x      The left edge of the rectangle
+   * @param y      The top edge of the rectangle
+   * @param width  The width of the rectangle
+   * @param height The height of the rectangle
+   */
+  public static void drawCenteredString(Graphics g, String s, double x, double y, double width, double height) {
+    drawCenteredString(g, s, x + width / 2, y + height / 2);
+  }
+
+  /**
+   * Draw a string centered in the given shape. The string will be vertically
+   * centered and horizontally centered with respect to the bounding box of the
+   * shape. If the string is too wide or to tall to fit within the bounds, it will
+   * overflow.
+   *
+   * @param g     The graphics context to draw on
+   * @param s     The string to draw
+   * @param shape in whose bounding box the string will be centered
+   */
+  public static void drawCenteredString(Graphics g, String s, Shape shape) {
+    Inf101Graphics.drawCenteredString(g, s, shape.getBounds2D().getCenterX(), shape.getBounds2D().getCenterY());
+  }
+
+  //////////////////////////////////////
+  /// Image helper methods
+  /////////////////////////////////////
+
+  /**
+   * Draw the given image rotated and scaled with a top-left at x,y
+   *
+   * @param g       The graphics context to draw on
+   * @param image   The image to draw
+   * @param x       The x coordinate of the top-left corner
+   * @param y       The y coordinate of the top-left corner
+   * @param scale   The scale factor (1.0 is 100%)
+   * @param radians The angle to rotate the image in radians
+   */
+  public static void drawImage(Graphics g, Image image, double x, double y, double scale, double radians) {
+    double imageWidth = image.getWidth(null);
+    double imageHeight = image.getHeight(null);
+    Dimension2D newSize = getImageSize(image, scale, radians);
+    AffineTransform transform = new AffineTransform();
+    transform.translate(x + newSize.getWidth() / 2, y + newSize.getHeight() / 2); // last (not first!)
+    transform.rotate(radians);
+    transform.scale(scale, scale);
+    transform.translate(-imageWidth / 2, -imageHeight / 2); // first
+    ((Graphics2D) g).drawImage(image, transform, null);
+  }
+
+  /**
+   * Draw the given image scaled with a top-left at x,y
+   *
+   * @param g     The graphics context to draw on
+   * @param image The image to draw
+   * @param x     The x coordinate of the top-left corner
+   * @param y     The y coordinate of the top-left corner
+   * @param scale The scale factor (1.0 is 100%)
+   */
+  public static void drawImage(Graphics g, Image image, double x, double y, double scale) {
+    Inf101Graphics.drawImage(g, image, x, y, scale, 0);
+  }
+
+  /**
+   * Draw the given image rotated and scaled with a center at x,y
+   *
+   * @param g       The graphics context to draw on
+   * @param image   The image to draw
+   * @param cx      The x coordinate of the center
+   * @param cy      The y coordinate of the center
+   * @param scale   The scale factor (1.0 is 100%)
+   * @param radians The angle to rotate the image in radians
+   */
+  public static void drawCenteredImage(Graphics g, Image image, double cx, double cy, double scale, double radians) {
+    Dimension2D newSize = getImageSize(image, scale, radians);
+    drawImage(g, image, cx - (newSize.getWidth()) / 2, cy - (newSize.getHeight()) / 2, scale, radians);
+  }
+
+  /**
+   * Draw the given image scaled with a center at x,y
+   *
+   * @param g     The graphics context to draw on
+   * @param image The image to draw
+   * @param cx    The x coordinate of the center
+   * @param cy    The y coordinate of the center
+   * @param scale The scale factor (1.0 is 100%)
+   */
+  public static void drawCenteredImage(Graphics g, Image image, double cx, double cy, double scale) {
+    Inf101Graphics.drawCenteredImage(g, image, cx, cy, scale, 0);
+  }
+
+  /**
+   * Get the size of the (bounding box of the) image after it has been scaled and
+   * rotated
+   *
+   * @param image   The image
+   * @param scale   The scale factor (1.0 is 100%)
+   * @param radians The angle to rotate the image in radians
+   * @return The size of the (bounding box of) the image after it has been scaled
+   *         and rotated
+   */
+  public static Dimension2D getImageSize(Image image, double scale, double radians) {
+    double imageWidth = image.getWidth(null);
+    double imageHeight = image.getHeight(null);
+    AffineTransform transform = new AffineTransform();
+    transform.rotate(radians);
+    transform.scale(scale, scale);
+    transform.translate(-imageWidth / 2, -imageHeight / 2); // first
+    double[] x = { 0, imageWidth, imageWidth, 0 };
+    double[] y = { 0, 0, imageHeight, imageHeight };
+    double minx = 0, maxx = 0, miny = 0, maxy = 0;
+    Point2D.Double src = new Point2D.Double();
+    Point2D.Double dst = new Point2D.Double();
+    for (int i = 0; i < 4; i++) {
+      src.setLocation(x[i], y[i]);
+      transform.transform(src, dst);
+      if (i == 0) {
+        minx = maxx = dst.getX();
+        miny = maxy = dst.getY();
+      } else {
+        minx = Math.min(dst.getX(), minx);
+        miny = Math.min(dst.getY(), miny);
+        maxx = Math.max(dst.getX(), maxx);
+        maxy = Math.max(dst.getY(), maxy);
+      }
+    }
+    final double width = maxx - minx;
+    final double height = maxy - miny;
+    return new Dimension2D() {
+      @Override
+      public double getWidth() {
+        return width;
+      }
+
+      @Override
+      public double getHeight() {
+        return height;
+      }
+
+      @Override
+      public void setSize(double width, double height) {
+        throw new UnsupportedOperationException();
+      }
+    };
+  }
+
+  /**
+   * Converts an image file into a BufferedImage. Note that in a maven project,
+   * the requested image file must be in the src/main/resources folder. It accepts
+   * most common image formats, such as jpg, png, etc.
+   *
+   * @param filename The name of the image file
+   * @return The image as a BufferedImage
+   * @throws RuntimeException if the image file is not found
+   */
+  public static BufferedImage loadImageFromResources(String filename) {
+    if (!filename.startsWith("/")) {
+      filename = "/" + filename;
+    }
+    InputStream is = Inf101Graphics.class.getResourceAsStream(filename);
+    if (is == null) {
+      throw new RuntimeException("Could not find image file in resources: " + filename);
+    }
+    try {
+      return ImageIO.read(is);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Converts an image file into a BufferedImage.
+   *
+   * @param file A file object with location the image file
+   * @return The image as a BufferedImage, or null if not found or not an image
+   */
+  public static BufferedImage loadImageFromFile(File file) {
+    try {
+      return ImageIO.read(file);
+    } catch (IOException | IllegalArgumentException e) {
+      return null;
+    }
+  }
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/view/CellPositionToPixelConverter.java:
+```
+package no.uib.inf101.game2048.view;
+
+import java.awt.geom.Rectangle2D;
+
+import no.uib.inf101.grid.CellPosition;
+import no.uib.inf101.grid.GridDimension;
+
+/**
+ * The CellPositionToPixelConverter class converts cell positions to pixel
+ * coordinates for rendering purposes.
+ */
+public class CellPositionToPixelConverter {
+
+  private final Rectangle2D box;
+  private final GridDimension gd;
+  private final double margin;
+
+  /**
+   * Constructs a new CellPositionToPixelConverter.
+   *
+   * @param box    the bounding box for the grid
+   * @param gd     the grid dimension (rows and columns)
+   * @param margin the margin between cells
+   */
+  public CellPositionToPixelConverter(Rectangle2D box, GridDimension gd, double margin) {
+    this.box = box;
+    this.gd = gd;
+    this.margin = margin;
+  }
+
+  /**
+   * Gets the bounding rectangle for the specified cell position.
+   *
+   * @param cellPosition the position of the cell
+   * @return the bounding rectangle for the cell
+   */
+  public Rectangle2D getBoundsForCell(CellPosition cellPosition) {
+    double cellW = (box.getWidth() - margin * gd.cols() - margin) / gd.cols();
+    double cellH = (box.getHeight() - margin * gd.rows() - margin) / gd.rows();
+    double cellX = box.getX() + margin + (cellW + margin) * cellPosition.col();
+    double cellY = box.getY() + margin + (cellH + margin) * cellPosition.row();
+    return new Rectangle2D.Double(cellX, cellY, cellW, cellH);
+  }
+
+}
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/view/DefaultColorTheme.java:
+```
+package no.uib.inf101.game2048.view;
+
+import java.awt.Color;
+
+public class DefaultColorTheme implements ColorTheme {
+
+  // Color pallette found from original game (link: https://play2048.co/) using
+  // Google chrome extension ColorZilla to find rgb values
+
+  public Color getCellColorForInt(int c) {
+    Color color = switch (c) {
+    case 0 -> new Color(204, 193, 180);
+    case 2 -> new Color(238, 228, 218);
+    case 4 -> new Color(237, 224, 200);
+    case 8 -> new Color(243, 178, 121);
+    case 16 -> new Color(245, 149, 99);
+    case 32 -> new Color(246, 124, 95);
+    case 64 -> new Color(246, 94, 59);
+    case 128 -> new Color(246, 94, 59);
+    case 256 -> new Color(237, 204, 97);
+    case 512 -> new Color(237, 200, 80);
+    case 1024 -> new Color(249, 207, 63);
+    case 2048 -> new Color(237, 194, 46);
+    default -> new Color(00, 00, 00); // should never be reached, kept in to prevent game crash
+    };
+    return color;
+  }
+
+  @Override
+  public Color getCellColor(Character c) {
+    Color color = switch (c) {
+    case 'r' -> new Color(255, 00, 00);
+    case 'g' -> new Color(00, 255, 00);
+    case 'y' -> new Color(00, 00, 255);
+    default -> new Color(00, 00, 00); // should never be reached, kept in to prevent game crash
+    };
+    return color;
+  }
+  @Override
+  public Color getFrameColor() {
+    return new Color(188, 172, 159);
+  }
+
+  @Override
+  public Color getBackgroundColor() {
+    return new Color(250, 248, 239);
+  }
+
+  @Override
+  public Color getLowTileNumberColor() {
+    return new Color(119, 110, 101);
+  }
+
+  @Override
+  public Color getHighTileNumberColor() {
+    return new Color(248, 246, 242);
+  }
+
+  @Override
+  public Color getSemitransparentColor() {
+    return new Color(0, 0, 0, 96);
+  }
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/view/ColorTheme.java:
+```
+package no.uib.inf101.game2048.view;
+
+import java.awt.Color;
+
+/**
+ * The ColorTheme interface defines methods for obtaining colors used in the
+ * game view.
+ */
+public interface ColorTheme {
+
+  /**
+   * Retrieves the color for a given character.
+   *
+   * @param value the value of a given tile for which to retrieve the color
+   * @return the color corresponding to the value
+   */
+  Color getCellColor(Character value);
+
+  /**
+   * Retrieves the color of the frame.
+   *
+   * @return the color of the frame
+   */
+  Color getFrameColor();
+
+  /**
+   * Retrieves the background color.
+   *
+   * @return the background color
+   */
+  Color getBackgroundColor();
+
+  /**
+   * Retrieves the color of tiles valued between 0 and 8
+   *
+   * @return the color of low tile numbers
+   */
+  Color getLowTileNumberColor();
+
+  /**
+   * Retrieves the color of tiles numbered 8 and up.
+   *
+   * @return the color of high tile numbers
+   */
+  Color getHighTileNumberColor();
+
+  /**
+   * Retrieves the semitransparent color.
+   *
+   * @return the semitransparent color
+   */
+  Color getSemitransparentColor();
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/game2048/view/SampleView.java:
+```
+package no.uib.inf101.game2048.view;
+
+import javax.swing.JPanel;
+
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+
+public class SampleView extends JPanel {
+
+  // Constructor
+  public SampleView() {
+    this.setFocusable(true);
+    this.setPreferredSize(new Dimension(300, 400));
+  }
+
+  // The paintComponent method is called by the Java Swing framework every time
+  // either the window opens or resizes, or we call .repaint() on this object.
+  // Note: NEVER call paintComponent directly yourself
+  @Override
+  public void paintComponent(Graphics g) {
+    super.paintComponent(g);
+    Graphics2D g2 = (Graphics2D) g;
+    paintSample(g2);
+  }
+
+  private void paintSample(Graphics2D g2) {
+    // A small rectangle (args: x, y of top-left corner, width, height)
+    Rectangle2D rect1 = new Rectangle2D.Double(20, 20, 100, 50);
+    g2.setColor(Color.BLACK);
+    g2.fill(rect1);
+
+    // A small rectangle further down
+    Rectangle2D rect2 = new Rectangle2D.Double(20, 120, 100, 50);
+    g2.setColor(Color.RED);
+    g2.fill(rect2);
+
+    // A small rectangle further to the right
+    Rectangle2D rect3 = new Rectangle2D.Double(170, 20, 100, 50);
+    g2.setColor(Color.YELLOW);
+    g2.fill(rect3);
+
+    // Draw a chess board that resize together with the window/component size
+    Rectangle2D chessBox = new Rectangle2D.Double(20, this.getHeight() / 2, this.getWidth() - 40,
+        this.getHeight() / 2 - 20);
+    this.drawChess(g2, chessBox);
+
+    // Using helper method from Inf101Graphics to draw centered text
+    // over the resizing chess board
+    g2.setColor(Color.LIGHT_GRAY);
+    g2.setFont(new Font("Arial", Font.BOLD, 30));
+    Inf101Graphics.drawCenteredString(g2, "Centered text", chessBox);
+  }
+
+  private void drawChess(Graphics2D g, Rectangle2D box) {
+    double cellWidth = box.getWidth() / 8;
+    double cellHeight = box.getHeight() / 8;
+
+    for (int row = 0; row < 8; row++) {
+      for (int col = 0; col < 8; col++) {
+        // Here we paint the chess tile at position (row, col)
+        // Pick the color
+        Color c = (row + col) % 2 == 0 ? Color.BLACK : Color.WHITE;
+        g.setColor(c);
+
+        // Calculate the position of the tile and paint it
+        double cellX = box.getX() + col * cellWidth;
+        double cellY = box.getY() + row * cellHeight;
+        Rectangle2D cellBox = new Rectangle2D.Double(cellX, cellY, cellWidth, cellHeight);
+        g.fill(cellBox);
+      }
+    }
+  }
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/grid/GridDimension.java:
+```
+package no.uib.inf101.grid;
+
+public interface GridDimension {
+
+  /** Number of rows in the grid */
+  int rows();
+
+  /** Number of columns in the grid */
+  int cols();
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/grid/IGrid.java:
+```
+package no.uib.inf101.grid;
+
+public interface IGrid<E> extends GridDimension, Iterable<GridCell<E>> {
+
+  /**
+   * Sets the value of a position in the grid. A subsequent call to {@link #get}
+   * with an equal position as argument will return the value which was set. The
+   * method will overwrite any previous value that was stored at the location.
+   * 
+   * @param pos   the position in which to store the value
+   * @param value the new value
+   * @throws IndexOutOfBoundsException if the position does not exist in the grid
+   */
+  void set(CellPosition pos, E value);
+
+  /**
+   * Gets the current value at the given coordinate.
+   * 
+   * @param pos the position to get
+   * @return the value stored at the position
+   * @throws IndexOutOfBoundsException if the position does not exist in the grid
+   */
+  E get(CellPosition pos);
+
+  /**
+   * Reports whether the position is within bounds for this grid
+   * 
+   * @param pos position to check
+   * @return true if the coordinate is within bounds, false otherwise
+   */
+  boolean positionIsOnGrid(CellPosition pos);
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/grid/Grid.java:
+```
+package no.uib.inf101.grid;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+/**
+ * The Grid class represents a two-dimensional grid structure, where each cell
+ * contains a value of type E. It implements the IGrid interface to provide
+ * basic grid operations.
+ *
+ * @param <E> the type of elements stored in the grid
+ */
+public class Grid<E> implements IGrid<E> {
+
+  private int rows;
+  private int cols;
+  private E defaultValue;
+  private List<List<E>> cells;
+
+  /**
+   * Constructs a new grid with the specified number of rows and columns,
+   * initialized with default values.
+   *
+   * @param rows the number of rows in the grid
+   * @param cols the number of columns in the grid
+   */
+  public Grid(int rows, int cols) {
+    this(rows, cols, null);
+  }
+
+  /**
+   * Constructs a new grid with the specified number of rows and columns,
+   * initialized with the specified default value.
+   *
+   * @param rows         the number of rows in the grid
+   * @param cols         the number of columns in the grid
+   * @param defaultValue the default value to initialize each cell with
+   */
+  public Grid(int rows, int cols, E defaultValue) {
+    this.rows = rows;
+    this.cols = cols;
+    this.defaultValue = defaultValue;
+
+    this.cells = new ArrayList<>();
+    for (int i = 0; i < rows; i++) {
+      List<E> row = new ArrayList<>();
+      for (int j = 0; j < cols; j++) {
+        row.add(defaultValue);
+      }
+      cells.add(row);
+    }
+  }
+
+  @Override
+  public int rows() {
+    return rows;
+  }
+
+  @Override
+  public int cols() {
+    return cols;
+  }
+
+  @Override
+  public Iterator<GridCell<E>> iterator() {
+    List<GridCell<E>> list = new ArrayList<>();
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
+        CellPosition pos = new CellPosition(i, j);
+        E value = get(pos);
+        GridCell<E> cell = new GridCell<>(pos, value);
+        list.add(cell);
+      }
+    }
+    return list.iterator();
+  }
+
+  @Override
+  public void set(CellPosition pos, E value) {
+    if (!positionIsOnGrid(pos))
+      throw new IndexOutOfBoundsException("Given position is not within grid: (" + pos.row() + ", " + pos.col() + ")");
+    cells.get(pos.row()).set(pos.col(), value);
+  }
+
+  @Override
+  public E get(CellPosition pos) {
+    if (!positionIsOnGrid(pos))
+      throw new IndexOutOfBoundsException("Given position is not within grid: (" + pos.row() + ", " + pos.col() + ")");
+    return cells.get(pos.row()).get(pos.col());
+  }
+
+  @Override
+  public boolean positionIsOnGrid(CellPosition pos) {
+    boolean isWithinRowBound = pos.row() >= 0 && pos.row() < rows;
+    boolean isWithinColBound = pos.col() >= 0 && pos.col() < cols;
+    return isWithinRowBound && isWithinColBound;
+  }
+}
+```
+
+Contents of src/main/java/no/uib/inf101/grid/GridCell.java:
+```
+package no.uib.inf101.grid;
+
+/**
+ * The GridCell class represents a cell within a grid, containing a position and
+ * a value.
+ *
+ * @param <E> the type of value stored in the cell
+ */
+public record GridCell<E>(CellPosition pos, E value) {
+
+}
+
+```
+
+Contents of src/main/java/no/uib/inf101/grid/CellPosition.java:
+```
+package no.uib.inf101.grid;
+
+/**
+ * The CellPosition class represents a position in a grid, specified by row and
+ * column indices. This class is immutable and serves to identify a specific
+ * cell within a grid.
+ */
+public record CellPosition(int row, int col) {
+}
+
+```
+
+Contents of src/main/consent/Consent.java:
+```
+package no.uib.inf101;
+
+/**
+ * Boolean variables to give or not give consent for the use of semesteroppgave
+ * 2 in teaching of computer science to future studenents at the Department of
+ * Informatics, University of Bergen.
+ * 
+ * The video sharing consent is only applicable if you produced a video for
+ * semesteroppgave 2.
+ */
+public class Consent {
+
+  /**
+   * I give consent that my name is published along side this application (and
+   * video).
+   */
+  public static final boolean shareName = true;
+
+  /**
+   * I give consent that this application is used for teaching of computer science
+   * at the Department of Informatics, University of Bergen.
+   */
+  public static final boolean shareApplication = true;
+
+  /**
+   * I give consent that the video produced along side this application is used
+   * for teaching of computer science at the Department of Informatics, University
+   * of Bergen.
+   */
+  public static final boolean shareVideo = true;
+
+}
+
+```
+
+Contents of src/main/logo/macosx/logo.icns:
+```
+[Could not decode file contents]
+
+```
+
+Contents of src/main/logo/windows/logo.ico:
+```
+[Could not decode file contents]
+
+```
+

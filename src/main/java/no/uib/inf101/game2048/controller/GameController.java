@@ -52,6 +52,8 @@ public class GameController implements KeyListener {
     if (e.getKeyCode() == KeyEvent.VK_T) {
       toggleMusicPlayback();
     }
+
+    // Repaint the view after handling input
     view.repaint();
   }
 
@@ -59,7 +61,6 @@ public class GameController implements KeyListener {
     char keyChar = e.getKeyChar();
     if (Character.isLetter(keyChar) || keyChar == '\b' || keyChar == '\n') {
       ((GameModel) model).updateCurrentGuess(keyChar);
-      model.toString();
     }
   }
 

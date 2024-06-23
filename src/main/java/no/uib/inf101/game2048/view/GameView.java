@@ -43,7 +43,7 @@ public class GameView extends JPanel {
     super.paintComponent(g);
     Graphics2D g2 = (Graphics2D) g;
     drawGame(g2);
-    drawGuesses(g2);
+    // drawGuesses(g2);
   }
 
   private void drawGame(Graphics2D g2) {
@@ -56,20 +56,22 @@ public class GameView extends JPanel {
     g2.setColor(colorTheme.getFrameColor());
     g2.fillRoundRect(boardX, boardY, gridWidth, gridHeight, CELLMARGIN, CELLMARGIN);
 
-    for (GridCell<Character> cell : viewableGameModel.getTilesOnBoard()) {
-      drawCell(g2, cell);
+    List<List<Character>> boardState = ((GameModel) viewableGameModel).getBoardState();
+
+    for (int row = 0; row < boardState.size(); row++) {
+      for (int col = 0; col < boardState.get(row).size(); col++) {
+        Character value = boardState.get(row).get(col);
+        drawCell(g2, row, col, value);
+      }
     }
   }
 
-  private void drawCell(Graphics2D g2, GridCell<Character> cell) {
-    int row = cell.pos().row();
-    int col = cell.pos().col();
-
+  private void drawCell(Graphics2D g2, int row, int col, Character value) {
     int x = OUTERMARGIN_X + col * (PREFERREDSIDESIZE + CELLMARGIN) + CELLMARGIN;
     int y = OUTERMARGIN_Y + row * (PREFERREDSIDESIZE + CELLMARGIN) + CELLMARGIN;
 
     Color backgroundColor = colorTheme.getBackgroundColor();
-    Color foregroundColor = colorTheme.getCellColor(2);
+    Color foregroundColor = colorTheme.getCellColor(value);
 
     g2.setColor(backgroundColor);
     g2.fillRoundRect(x, y, PREFERREDSIDESIZE, PREFERREDSIDESIZE, CELLMARGIN, CELLMARGIN);
@@ -77,7 +79,7 @@ public class GameView extends JPanel {
     g2.setColor(foregroundColor);
     g2.setFont(new Font("SansSerif", Font.BOLD, GUESSEDWORD_FONTSIZE));
 
-    String cellValue = cell.value() == null ? "" : cell.value().toString();
+    String cellValue = value == ' ' ? "" : Character.toString(value);
     Rectangle2D textBounds = g2.getFontMetrics().getStringBounds(cellValue, g2);
 
     int textX = (int) (x + (PREFERREDSIDESIZE - textBounds.getWidth()) / 2);

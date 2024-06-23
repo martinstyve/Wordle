@@ -18,7 +18,7 @@ public class GameMain {
   public static final String WINDOW_TITLE = "INF101 2048";
 
   public static void main(String[] args) {
-    GameBoard board = new GameBoard(5, 6);
+    GameBoard board = new GameBoard(6, 5);
     // NumberedTileFactory factory = new RandomNumberedTileFactory();
     GameModel model = new GameModel(board);
     GameView view = new GameView(model);
